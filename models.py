@@ -3,8 +3,72 @@ import torch.nn as nn
 import numpy as np
 from utils import *
 
+class SimpleBaseModel(nn.Module):
+    def __init__(self, input_dim, hidden_size, n_hidden, leaky_relu_slope=0.0, device='cuda'):
+        super(SimpleBaseModel, self).__init__()
+        self.NAME = "SimpleBaseModel"
+        self.input_dim = input_dim
+        self.hidden_size = hidden_size
+        self.n_hidden = n_hidden
+        self.layers = []
+        # be careful - if n_hidden is 0 then just a linear layer from input_dim to input_dim
+        cur_dim = input_dim
+        for i in range(self.n_hidden):
+            self.layers.append(nn.Linear(cur_dim, hidden_size))
+            cur_dim = hidden_size
+        self.layers.append(nn.Linear(cur_dim, input_dim))
+        self.layers = nn.ModuleList(self.layers)
+        self.non_linearity = nn.LeakyReLU(leaky_relu_slope)
+        self.device = device
 
+    def forward(self, X):
+        for layer in self.layers:
+            X = layer(X)
+            X = torch.relu(X)
+        return X
+
+class SoftmaxClassifier(nn.Module):
+    def __init__(self, input_dim, output_dim, softmax = False, device='cuda'):
+        super(SoftmaxClassifier, self).__init__()
+        self.NAME = "SoftmaxClassifier"
+        self.input_dim = input_dim
+        self.output_dim = output_dim
+        self.device = device
+        self.out = nn.Linear(input_dim, self.output_dim)
+        self.softmax = softmax
+
+    def forward(self, X):
+        out = self.out(X)
+        if self.softmax:
+            return torch.nn.functional.softmax(out, dim=1)
+        return out
     
+####### FFN 
+
+class FFN(nn.Module):
+    def __init__(self, INPUT_DIM, HIDDEN_DIM, DEVICE='cpu'):
+        super(FFN, self).__init__()
+        self.NAME = "FFN"
+        self.HIDDEN_DIM = HIDDEN_DIM
+        self.INPUT_DIM = INPUT_DIM
+        self.devivce = DEVICE
+
+        self.input = nn.Linear(self.INPUT_DIM, self.HIDDEN_DIM).to(self.devivce)
+        self.out = nn.Linear(self.HIDDEN_DIM, 1)
+
+    def forward(self, X):
+        X1 = torch.sigmoid(self.input(X))
+        X2 = self.out(X1)
+
+        y_hat = X2.view(-1)
+
+        return y_hat
+
+    def computeLoss(self, logits, labels):
+        criterion = nn.BCEWithLogitsLoss()
+        loss = criterion(logits, labels)
+        return loss
+
 class bayesian_classifier_chain_clf(nn.Module):
     def __init__(self, INPUT_DIM, HIDDEN_DIM, N_CLASSES, PARENT_DICT,  DEVICE='cuda', CELL_TYPE='GRU'):
         super(bayesian_classifier_chain_clf, self).__init__()

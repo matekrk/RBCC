@@ -1,8 +1,8 @@
-import torch 
-from sklearn.base import BaseEstimator
-import models
 import numpy as np
 from tqdm import tqdm
+from sklearn.base import BaseEstimator
+import torch 
+import models
 
 class SoftmaxClassifierClf(BaseEstimator): # Inherits scikit-learn base classifier
     def __init__(self, input_size, batch_size, classes, noise_label,
@@ -164,7 +164,8 @@ class ExtendedSoftmaxClassifierClf(BaseEstimator): # Inherits scikit-learn base 
         return (map_preds == y).float().mean()
     
     def fit(self, X, y):
-        self.model_base.train()
+        if self.model_base is not None:
+            self.model_base.train()
         for model in self.model_heads:
             model.train()
 

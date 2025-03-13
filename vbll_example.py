@@ -51,6 +51,7 @@ def setup_hyperparameters(len_data):
     return hidden_size, n_hidden, batch_size, num_epochs, num_runs, learning_rate, reg_weight, param, softmax_bound, return_ood, prior_scale, noise_label
 
 def do_experiments():
+    results_dir = 'results'
     exp_name = 'scene'
     classes = ['Beach', 'Sunset', 'FallFoliage', 'Field', 'Mountain', 'Urban']
     num_input_features = 294
@@ -61,11 +62,12 @@ def do_experiments():
     len_data = len(X_train)
     hidden_size, n_hidden, batch_size, num_epochs, num_runs, learning_rate, reg_weight, param, softmax_bound, return_ood, prior_scale, noise_label = setup_hyperparameters(len_data)
 
-    device = torch.device('cuda' if torch.cuda.is_available() else 'cpu')
+    dev_str = 'cuda' if torch.cuda.is_available() else 'cpu'
+    device = torch.device(dev_str)
     print('Using device:', device)
     verbose = False
 
-    whole_exp_name = exp_name + f"_vbll_extended_results_{hidden_size}x{n_hidden}_{param}_{prior_scale}_{learning_rate}_{num_epochs}_cuda"
+    whole_exp_name = exp_name + f"_vbll_extended_results_{hidden_size}x{n_hidden}_{param}_{prior_scale}_{learning_rate}_{num_epochs}_{dev_str}"
 
     vbll_clf_dict = {}
     fig, ax1 = plt.subplots(figsize=(10, 10))
@@ -89,7 +91,7 @@ def do_experiments():
         ax1.plot(loss_list, label='Loss run ' + str(run), color=blue_color)
         ax2.plot(acc_list, label='Accuracy run ' + str(run), color=orange_color)
         
-        clf.save(f'./{whole_exp_name}_{run}.pt')
+        clf.save(f'./{results_dir}/{whole_exp_name}_{run}.pt')
 
         preds, y_pred = clf.predict_with_proba(X_test)
         vbll_clf_dict[run]['y_test'] = y_test
@@ -108,8 +110,8 @@ def do_experiments():
 
     plt.legend()
     plt.show()
-    plt.savefig(f'./{whole_exp_name}.png')
-    with open(whole_exp_name + ".pkl", "wb") as f:
+    plt.savefig(f'./{results_dir}/{whole_exp_name}.png')
+    with open(f'./{results_dir}/{whole_exp_name}' + ".pkl", "wb") as f:
         pickle.dump(vbll_clf_dict, f)
 
 def main():

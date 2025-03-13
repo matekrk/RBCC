@@ -2,10 +2,10 @@ import sys, os
 import pickle
 import matplotlib.pyplot as plt
 from matplotlib.colors import to_rgba
-import vbll_classifier
 from sklearn.metrics import zero_one_loss, hamming_loss, f1_score, accuracy_score
 import torch
 
+from softmax_classifier import ExtendedSoftmaxClassifierClf
 from utils import *
 
 def setup_data(classes, input_features):
@@ -36,12 +36,13 @@ def setup_hyperparameters(len_data):
     learning_rate = 1e-3
     noise_label = True
 
-    hidden_size = 294
+    hidden_size = 0
     n_hidden = 0
 
     return hidden_size, n_hidden, batch_size, num_epochs, num_runs, learning_rate, noise_label
 
 def do_experiments():
+    results_dir = 'results'
     exp_name = 'scene'
     classes = ['Beach', 'Sunset', 'FallFoliage', 'Field', 'Mountain', 'Urban']
     num_input_features = 294
@@ -74,7 +75,7 @@ def do_experiments():
 
         print(f'run {run}')
 
-        clf = vbll_classifier.ExtendedSoftmaxClassifierClf(num_input_features, hidden_size, n_hidden, batch_size, classes, noise_label, device, learning_rate, num_epochs, verbose)
+        clf = ExtendedSoftmaxClassifierClf(num_input_features, hidden_size, n_hidden, batch_size, classes, noise_label, device, learning_rate, num_epochs, verbose)
 
         loss_list, acc_list = clf.fit(X_train, y_train)
 
@@ -84,7 +85,7 @@ def do_experiments():
         ax1.plot(loss_list, label='Loss run ' + str(run), color=blue_color)
         ax2.plot(acc_list, label='Accuracy run ' + str(run), color=orange_color)
         
-        clf.save(f'./{whole_exp_name}_{run}.pt')
+        clf.save(f'./{results_dir}/{whole_exp_name}_{run}.pt')
 
         preds, y_pred = clf.predict_with_proba(X_test)
         vbll_clf_dict[run]['y_test'] = y_test
@@ -103,8 +104,8 @@ def do_experiments():
 
     plt.legend()
     plt.show()
-    plt.savefig(f'./{whole_exp_name}.png')
-    with open(whole_exp_name + ".pkl", "wb") as f:
+    plt.savefig(f'./{results_dir}/{whole_exp_name}.png')
+    with open(f'./{results_dir}/{whole_exp_name}' + ".pkl", "wb") as f:
         pickle.dump(vbll_clf_dict, f)
 
 def main():

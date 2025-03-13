@@ -228,6 +228,8 @@ class ExtendedSoftmaxClassifierClf(BaseEstimator): # Inherits scikit-learn base 
         return loss_list, acc_list
     
     def predict_with_proba(self, X):
+        if self.model_base is not None:
+            self.model_base.eval()
         for model in self.model_heads:
             model.eval()
         test_dataset = torch.utils.data.TensorDataset(torch.tensor(X, dtype=torch.float32))

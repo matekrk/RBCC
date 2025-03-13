@@ -69,6 +69,8 @@ class VBLLClassifierClf(BaseEstimator): # Inherits scikit-learn base classifier
         return (map_preds == y).float().mean()
 
     def fit(self, X, y):
+        if self.model_base is not None:
+            self.model_base.train()
         for model in self.model_heads:
             model.train()
 
@@ -128,6 +130,8 @@ class VBLLClassifierClf(BaseEstimator): # Inherits scikit-learn base classifier
         return loss_list, acc_list
 
     def predict_with_proba(self, X):
+        if self.model_base is not None:
+            self.model_base.eval()
         for model in self.model_heads:
             model.eval()
         test_dataset = torch.utils.data.TensorDataset(torch.tensor(X, dtype=torch.float32))
